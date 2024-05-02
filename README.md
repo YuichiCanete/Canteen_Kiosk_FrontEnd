@@ -7,13 +7,13 @@
 
 ### Setup
 ```
-  cd front-end
+  cd Canteen_Kiosk_FrontEnd
   npm install primevue
   npm install primeicons
 ```
 
 ### To Run
 ```
-  cd front-end
+  cd Canteen_Kiosk_FrontEnd
   npm run dev
 ```
