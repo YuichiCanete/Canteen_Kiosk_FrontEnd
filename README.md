@@ -1,5 +1,10 @@
 ## Front End (using vscode)
 
+### Cloning
+```
+  git clone https://github.com/YuichiCanete/Canteen_Kiosk_FrontEnd.git
+```
+
 ### Setup
 ```
   cd front-end
