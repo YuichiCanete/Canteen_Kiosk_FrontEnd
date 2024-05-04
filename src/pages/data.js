@@ -103,6 +103,8 @@ class apiFunctions {
     }
 }
 
+let currentUser = ref(0);
+
 // [Extract Id from link]
 // const router = useRouter();
 // const expenseId = parseInt(router.currentRoute.value.params.expenseId);
@@ -110,4 +112,4 @@ class apiFunctions {
 // Example usage:
 const apiFunc = ref(new apiFunctions())
 const myOrder = ref(new meOrder())
-export { apiFunc, myOrder};
+export { apiFunc, myOrder, currentUser};

@@ -57,8 +57,12 @@
             <div class="my-payment text-center">
                 <h4>Payment</h4>
                 <p>Total Payment: P100 </p>
-                <input type="button" value="Cash" class="m-2 btn-uic" @click="router.push('/orderSuccess')">
-                <input type="button" value="Tally" class="btn-uic" @click="">
+
+                <Button label="Cash" icon="pi pi-money-bill" class="m-2" @click="router.push('/orderSuccess')"></Button>
+                <Button label="Tally" icon="pi pi-list" class="m-2" @click=""></Button>
+
+                <!-- <input type="button" value="Cash" class="m-2 btn-uic" @click="router.push('/orderSuccess')">
+                <input type="button" value="Tally" class="btn-uic" @click=""> -->
             </div>
         </div>
     </div>

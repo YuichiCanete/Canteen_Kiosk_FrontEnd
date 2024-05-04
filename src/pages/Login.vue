@@ -1,6 +1,6 @@
 <script setup>
     import { ref } from 'vue';
-    import { apiFunc } from './data.js';
+    import { apiFunc,currentUser } from './data.js';
     import { useRouter } from 'vue-router';
     import { useConfirm } from "primevue/useconfirm";
     import { useToast } from "primevue/usetoast";
@@ -23,6 +23,8 @@
         if (user.isSuccess && user.data.length > 0) {
             user = user.data[0];
             if (parseInt(userInp.value) === user.user_id && passInp.value === user.password) {
+                currentUser.value = user.user_id
+                console.log('Current User: '+currentUser.value)
                 isLogging.value = true
                 loginSuccess()
                 setTimeout(()=>{
