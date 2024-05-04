@@ -43,25 +43,29 @@
     async function onSubmit() {
         const actions = [
             async () => {
-                await apiFunc.value.add('http://127.0.0.1:8000/api/users/', {
+                return await apiFunc.value.add('http://127.0.0.1:8000/api/users/', {
                     user_id: parseInt(userInp.value),
                     password: passInp.value,
                     user_type: selectedType.value.code
                 });
             },
             async () => {
-                await apiFunc.value.update(`http://127.0.0.1:8000/api/users/${userInp.value}`, {
+                return await apiFunc.value.update(`http://127.0.0.1:8000/api/users/${userInp.value}`, {
                     password: passInp.value,
                     user_type: selectedType.value.code
                 });
             },
             async () => {
-                await apiFunc.value.remove(`http://127.0.0.1:8000/api/users/${userInp.value}`);
+                return await apiFunc.value.remove(`http://127.0.0.1:8000/api/users/${userInp.value}`);
             }
         ];
-        await actions[selectedTab.value]();
+        let response = await actions[selectedTab.value]();
         updateUsers();
-        loginError()
+        if (response.isSuccess){
+            actionSuccess()
+        }else{
+            actionError()
+        }   
 
     }
 
@@ -70,12 +74,22 @@
     const passInp = ref()
     const selectedType = ref()    
 
-    function loginError(){
+    function actionError(){
         toast.add({
             severity: 'error', 
-            summary: 'Login Error',
-            detail: 'Incorrect Credentials',
-            life: 2000 });
+            summary: 'Action Error',
+            detail: 'Failed to execute the action',
+            life: 2000
+        });
+    }
+
+    function actionSuccess(){
+        toast.add({
+            severity: 'success', 
+            summary: 'Action Successful',
+            detail: 'Successfully executed action',
+            life: 2000
+        });
     }
 
 </script>
@@ -108,12 +122,12 @@
 
 <style scoped>
 
-    :deep(.p-menuitem-text), :deep(.p-menuitem-icon){
-        color: #D94496;
-    }
+:deep(.p-menuitem-text), :deep(.p-menuitem-icon){
+    color: #D94496;
+}
 
-    :deep(.p-menuitem-link){
-        text-decoration: none;
-    }
+:deep(.p-menuitem-link){
+    text-decoration: none;
+}
 
 </style>

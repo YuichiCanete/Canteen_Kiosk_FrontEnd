@@ -37,6 +37,7 @@
                             router.push('/admin')
                             break;
                         case "counter":
+                            router.push('/counter')
                             break;
                     }
                 },1000)

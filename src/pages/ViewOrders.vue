@@ -1,6 +1,10 @@
 <script setup>
     import { onBeforeMount, ref } from 'vue';
     import {apiFunc} from './data.js'
+    import TabMenu from 'primevue/tabmenu';
+    import Listbox from 'primevue/listbox'
+    
+
     import {useRouter} from 'vue-router'
     const router = useRouter()
     function switchTo(path){
@@ -40,49 +44,47 @@
 
     onBeforeMount(getOrders);
 
+    const tabOptions = ref([
+        { label: 'View Orders', icon: 'pi pi-shopping-cart'},
+        { label: 'View Tally', icon: 'pi pi-eye'},
+        { label: 'Edit Food', icon: 'pi pi-file-edit'}, 
+        { label: 'Add Food', icon: 'pi pi-plus-circle'}, 
+    ]);
 
-
-    
-
-
-
-    
 
 </script>
 
 <template>
     <Header title="View Orders" icon="pi-eye"></Header>
+    <TabMenu :model="tabOptions" v-model:activeIndex="selectedTab"/>
 
-    <div class="m-3">
-        <div class="order-table color-base p-2 m-2 box-shadow round-border">
-            <table class="w-100" v-if="isLoaded">
-                <tr class="text-white text-shadow under-line">
-                    <th>ID</th>
-                    <th>Order</th>
-                    <th>Payment Type</th>
-                    <th>Total</th>
-                    <th>Date</th>
-                </tr>
-                <tr v-for="order in orderList" class="under-line">
-                    <td>{{ order.orderNum }}</td>
-                    <td>
-                        <p v-for="food in order.foodList">
-                            
-                            {{ food.name }} x{{ food.quantity }}
-                            
-                        </p>
-                    </td>
-                    <td>{{ order.paytype }}</td>
-                    <td>{{ order.total }}</td>
-                    <td>{{ order.date }}</td>
-                </tr>
-            </table>
-        </div>
-
-        <input type="button" value="Edit Menu" class="btn-uic m-2" @click="switchTo('/editMenu')">
-        <input type="button" value="Print" class="btn-uic m-2">
-
+    <h2 class="text-pink m-2">Orders List</h2>
+    <div class="m-2">
+        <DataTable :value="orderList" tableStyle="width: 100%" scrollable scrollHeight="400px">
+            <Column field="orderNum" header="ID"></Column>
+            <Column field="paytype" header="Payment Type"></Column>
+            <Column field="total" header="Total"></Column>
+            <Column field="date" header="Date"></Column>
+            <Column header="Food Items">
+                <template #body="rowData">
+                    <Listbox v-if="rowData.foodList && rowData.foodList.length" :options="rowData.foodList" optionLabel="name" style="max-height: 150px; overflow-y: auto;">
+                        <template #item="option">
+                            {{ option.name }} x{{ option.quantity }}
+                        </template>
+                    </Listbox>
+                    <span v-else>No food items</span>
+                </template>
+            </Column>
+        </DataTable>
     </div>
+
+    <Button label="Generate Tally" icon="pi pi-file-export" class="m-2"></Button>
+
+
+
+
+
+    
 
     
     
@@ -103,6 +105,14 @@
 
     .under-line {
         border-bottom: 1px solid white;
+    }
+
+    :deep(.p-menuitem-text), :deep(.p-menuitem-icon){
+        color: #D94496;
+    }
+
+    :deep(.p-menuitem-link){
+        text-decoration: none;
     }
 
 </style>

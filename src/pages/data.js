@@ -46,7 +46,6 @@ class apiFunctions {
         try {
             const response = await axios.get(linkRoute);
             console.log('Get Success');
-            console.log(response.data)
             return {
                 isSuccess: true,
                 data: response.data
@@ -69,8 +68,10 @@ class apiFunctions {
             }
         });
           console.log('Update Success');
+          return {isSuccess:true}
         } catch (err) {
           console.error('Update Error:', err);
+          return {isSuccess:false}
         }
     }
 
@@ -83,18 +84,21 @@ class apiFunctions {
                 }
             });
             console.log('Adding Success')
+            return {isSuccess:true}
         } catch (err) {
             console.error('Adding Error:', err);    
+            return {isSuccess:false}
         }
     }
 
     async remove(linkRoute){
-        // Make sure naay ID
         try {
             await axios.delete(linkRoute);   
             console.log('Delete Success')
+            return {isSuccess:true}
         } catch (err) {
             console.error('Deleting Error:', err);
+            return {isSuccess:false}
         }
     }
 }
