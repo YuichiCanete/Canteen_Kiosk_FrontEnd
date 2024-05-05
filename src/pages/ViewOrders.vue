@@ -6,6 +6,29 @@
 
     let isLoaded = ref(false);
     let orderList = ref([]);
+    let tallyList = ref([]);
+    let foodList = ref([])
+    const selectedTab = ref(0)
+    const editing = ref({})
+    const selectedStatus = ref()
+
+    const tabOptions = ref([
+        { label: 'View Orders', icon: 'pi pi-shopping-cart'},
+        { label: 'View Tally', icon: 'pi pi-eye'},
+        { label: 'Edit Food', icon: 'pi pi-file-edit'}, 
+        { label: 'Add Food', icon: 'pi pi-plus-circle'}, 
+    ]);
+
+    const orderStats = ref([
+        {name: 'Preparing', code:'preparing',},
+        {name: 'Ready', code:'ready',},
+        {name: 'Cancelled', code:'cancelled',},
+        {name: 'Done', code:'done',},
+    ])
+
+    function editOrder(orderData){
+        editing.value = orderData
+    }
 
     async function getOrders() {
         let orderRequest = await apiFunc.value.get('http://127.0.0.1:8000/api/view_order');
@@ -36,27 +59,6 @@
         }
     }
 
-    const tabOptions = ref([
-        { label: 'View Orders', icon: 'pi pi-shopping-cart'},
-        { label: 'View Tally', icon: 'pi pi-eye'},
-        { label: 'Edit Food', icon: 'pi pi-file-edit'}, 
-        { label: 'Add Food', icon: 'pi pi-plus-circle'}, 
-    ]);
-
-    const orderStats = ref([
-        {name: 'Preparing', code:'preparing',},
-        {name: 'Ready', code:'ready',},
-        {name: 'Cancelled', code:'cancelled',},
-        {name: 'Done', code:'done',},
-    ])
-
-    const selectedTab = ref(0)
-    const editing = ref({})
-    const selectedStatus = ref()
-
-    function editOrder(orderData){
-        editing.value = orderData
-    }
 
     async function updateStatus(orderData){
         const updatedData = {
@@ -69,7 +71,38 @@
         await apiFunc.value.update(`http://127.0.0.1:8000/api/user_order/${orderData.orderNum}`, updatedData);
     }
 
+    async function getTally(){
+        let requestTally = await apiFunc.value.get('http://127.0.0.1:8000/api/get_tallies') 
+        if (requestTally.isSuccess){
+            tallyList.value = requestTally.data
+        }   
+    }
+
+    async function getFood(){
+        let requestFood = await apiFunc.value.get('http://127.0.0.1:8000/api/food_details')
+        if (requestFood.isSuccess){
+            foodList.value = requestFood.data
+        }
+    }
+
     onBeforeMount(getOrders);
+    onBeforeMount(getTally)
+    onBeforeMount(getFood)
+
+    const editFoodInfo = ref([
+        {field: 'name', header:'Food Name'},
+        {field: 'price', header:'Price'},
+        {field: 'available_stock', header:'Inventory'},
+        {field: 'image', header:'image link'}
+    ])
+
+    async function saveFood(foodData){
+        await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/${foodData.food_detail_id}`,{
+            name: foodData.name,
+            price: foodData.price,
+            available_stock: foodData.available_stock
+        })
+    }
 
 </script>
 
@@ -77,7 +110,6 @@
     <Header title="View Orders" icon="pi-eye"></Header>
     <TabMenu :model="tabOptions" v-model:activeIndex="selectedTab"/>
     
-
     <h2 class="text-pink m-2">{{ tabOptions[selectedTab].label }}</h2>
 
     <div class="m-2">
@@ -108,14 +140,30 @@
         </div>
 
         <div v-else-if="selectedTab===1">
-            <DataTable>
-
+            <DataTable :value="tallyList" tableStyle="width: 100%" scrollable scrollHeight="400px">
+                <Column field="user_id" header="User Id"></Column>
+                <Column field="salary_period" header="Salary Period"></Column>
+                <Column field="tally_status" header="Status"></Column>
             </DataTable>
             <Button label="Generate Tally" icon="pi pi-file-export" class="m-2"></Button>
         </div>
 
         <div v-else-if="selectedTab===2">
-
+            <DataTable :value="foodList" tableStyle="width: 100%" scrollable scrollHeight="400px">
+                <Column field="food_detail_id" header="ID"></Column>
+                <div v-for="editFood in editFoodInfo">
+                    <Column :field="editFood.field" :header="editFood.header">
+                        <template #body="rowData">
+                            <InputText v-model="rowData.data[editFood.field]"/>
+                        </template>
+                    </Column>
+                </div>
+                <Column header="Actions">
+                    <template #body="rowData">
+                        <Button label="Save" @click="saveFood(rowData.data)"></Button>
+                    </template>
+                </Column>
+            </DataTable>
         </div>
 
         <div v-else-if="selectedTab===3">
