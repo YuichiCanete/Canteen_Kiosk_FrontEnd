@@ -1,19 +1,11 @@
 <script setup>
     import FoodCard from '../components/FoodCard.vue'
     import FoodInList from '../components/FoodInList.vue';
-    import {apiFunc,myOrder} from './data.js'
+    import {apiFunc} from './data.js'
     import {useRouter} from 'vue-router'
     import { onBeforeMount, ref } from 'vue';
     
     const router = useRouter()
-    function switchTo(path){
-        router.push(path)
-    }
-
-    function addOrder(){
-        data.value.addOrder()
-        switchTo('/orderSuccess')
-    }
 
     let isloaded = ref(false)
     let foodList = ref([])
@@ -25,13 +17,6 @@
         }
     }
     onBeforeMount(getFood)
-
-    let myOrdaer = ref()
-
-    
-
-    
-
 
 </script>
 

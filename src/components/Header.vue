@@ -17,7 +17,7 @@
             <h2 class="text-shadow" style="font-size: 30px;"><i :class="icon" class="pi text-shadow m-2 mt-0 mb-0" style="font-size: 25px;"></i >{{ title }}</h2>
         </div>
     </div>
-    <Button icon="pi pi-power-off" label="Logout" class="logoutButton text-shadow" @click="router.push('/')" v-if="title !== 'Login Page'"></Button>
+    <Button icon="pi pi-power-off" label="Logout" class="logoutButton text-shadow" @click="router.push('/welcome')" v-if="title !== 'Login Page'"></Button>
 </div>
 
 
