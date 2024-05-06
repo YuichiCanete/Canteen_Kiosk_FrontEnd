@@ -12,6 +12,13 @@
     const editing = ref({})
     const selectedStatus = ref()
 
+    let foodAdding = ref({
+        name: '',
+        price: 0,
+        available_stock: 0,
+        image: ''
+    })
+
     const tabOptions = ref([
         { label: 'View Orders', icon: 'pi pi-shopping-cart'},
         { label: 'View Tally', icon: 'pi pi-eye'},
@@ -59,18 +66,6 @@
         }
     }
 
-
-    async function updateStatus(orderData){
-        const updatedData = {
-            payment_type: orderData.paytype,
-            order_date: orderData.date,
-            user_id: orderData.user,
-            order_status: selectedStatus.value.code
-        }
-        orderData.status = selectedStatus.value.code
-        await apiFunc.value.update(`http://127.0.0.1:8000/api/user_order/${orderData.orderNum}`, updatedData);
-    }
-
     async function getTally(){
         let requestTally = await apiFunc.value.get('http://127.0.0.1:8000/api/get_tallies') 
         if (requestTally.isSuccess){
@@ -85,9 +80,10 @@
         }
     }
 
-    onBeforeMount(getOrders);
-    onBeforeMount(getTally)
-    onBeforeMount(getFood)
+
+    
+
+    
 
     const editFoodInfo = ref([
         {field: 'name', header:'Food Name'},
@@ -96,13 +92,45 @@
         {field: 'image', header:'image link'}
     ])
 
+    async function updateStatus(orderData){
+        const updatedData = {
+            payment_type: orderData.paytype,
+            order_date: orderData.date,
+            user_id: orderData.user,
+            order_status: selectedStatus.value.code
+        }
+        orderData.status = selectedStatus.value.code
+        await apiFunc.value.update(`http://127.0.0.1:8000/api/user_order/${orderData.orderNum}`, updatedData);
+        updateDetails()
+    }
+
     async function saveFood(foodData){
         await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/${foodData.food_detail_id}`,{
             name: foodData.name,
             price: foodData.price,
             available_stock: foodData.available_stock
         })
+        updateDetails()
     }
+
+    async function addFood(){
+        await apiFunc.value.add('http://127.0.0.1:8000/api/food_details/',foodAdding.value)
+        foodAdding.value = {
+            name: '',
+            price: 0,
+            available_stock: 0,
+            image: ''
+        }
+        updateDetails()
+    }
+
+    async function updateDetails(){
+        await getOrders()
+        await getTally()
+        await getFood()
+    }
+
+    onBeforeMount(updateDetails);
 
 </script>
 
@@ -144,6 +172,7 @@
                 <Column field="user_id" header="User Id"></Column>
                 <Column field="salary_period" header="Salary Period"></Column>
                 <Column field="tally_status" header="Status"></Column>
+                <Column field="amount" header="Amount"></Column>
             </DataTable>
             <Button label="Generate Tally" icon="pi pi-file-export" class="m-2"></Button>
         </div>
@@ -167,7 +196,12 @@
         </div>
 
         <div v-else-if="selectedTab===3">
-
+            <InputText v-model="foodAdding.name" placeholder="Food Name" class="m-2"></InputText> <br>
+            <InputText v-model="foodAdding.price" placeholder="Price" class="m-2"></InputText> <br>
+            <InputText v-model="foodAdding.available_stock" placeholder="Inventory" class="m-2"></InputText> <br>
+            <InputText v-model="foodAdding.image" placeholder="Image Link" class="m-2"></InputText> <br>
+            <Button label="Add" icons="pi pi-plus" class="m-2" @click="addFood()"></Button>
+            <img :src="foodAdding.image" v-if="foodAdding.image != ''" style="width: min(500px,100%); height: min(500px,100%);">
         </div>
 
     </div>

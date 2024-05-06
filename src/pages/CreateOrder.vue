@@ -59,7 +59,8 @@
                     
                     <Card style="width: 300px; overflow: hidden;" class="box-shadow">
                         <template #header>
-                            <img src="../assets/food_placeholder.jpg" style="width: 100%;">
+                            <img src="../assets/food_placeholder.jpg" style="width: 100%; height: max(100px,100%);" v-if="food.image === ''">
+                            <img :src="food.image" style="width: 100%; height: 200px;" v-else>
                         </template>
                         <template #title>{{ food.name }}</template>
                         <template #subtitle> P{{ food.price }}</template>
