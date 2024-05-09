@@ -1,9 +1,10 @@
 <script setup>
     import { ref } from 'vue';
-    import { apiFunc,currentUser } from './data.js';
+    import { apiFunc } from './data.js';
     import { useRouter } from 'vue-router';
     import { useConfirm } from "primevue/useconfirm";
     import { useToast } from "primevue/usetoast";
+    import { myOrder } from './data.js';
 
     const confirm = useConfirm();
     const toast = useToast();
@@ -22,9 +23,8 @@
         let user = await getUsers(userInp.value);
         if (user.isSuccess && user.data.length > 0) {
             user = user.data[0];
-            if (parseInt(userInp.value) === user.user_id && passInp.value === user.password) {
-                currentUser.value = user.user_id
-                console.log('Current User: '+currentUser.value)
+            if (parseInt(userInp.value) === user.user_id && passInp.value === user.password && user.user_type != 'student') {
+                await myOrder.loginUser(user.user_id)
                 isLogging.value = true
                 loginSuccess()
                 setTimeout(()=>{
@@ -58,7 +58,8 @@
             severity: 'error', 
             summary: 'Login Error',
             detail: 'Incorrect Credentials',
-            life: 2000 });
+            life: 2000
+        });
     }
 
     function loginSuccess(){
@@ -66,7 +67,8 @@
             severity: 'success', 
             summary: 'Login Successful',
             detail: 'successfully logged in your account',
-            life: 1000 });
+            life: 1000
+        });
     }
 </script>
 

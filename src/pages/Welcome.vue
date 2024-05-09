@@ -1,17 +1,17 @@
 <script setup>
     import { useRouter } from 'vue-router';
-    import { currentUser } from './data';
-    
+    import { myOrder } from './data';
     
 
     const router = new useRouter()
 
     function navigateCreateOrder(){
+        myOrder.loginDefault()
         router.push('/createOrder')
     }
 
     function navigateLogin(){
-        currentUser.value = 0
+        myOrder.loginDefault()
         router.push('/')
     }
 

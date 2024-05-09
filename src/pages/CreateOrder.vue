@@ -2,8 +2,11 @@
     import {apiFunc} from './data.js'
     import {useRouter} from 'vue-router'
     import { onBeforeMount, ref } from 'vue';
+    import { myOrder } from './data.js';
     
     const router = useRouter()
+    
+    let loggedUser = myOrder.currentUser[0]
 
     let isloaded = ref(false)
     let foodList = ref([])
@@ -46,6 +49,67 @@
             totalPrice.value += food.quantity * food.price
         })
     }
+
+    function getDate(){
+        const currentDate = new Date();
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const year = currentDate.getFullYear();
+        return `${year}-${month}-${day}`;
+    }
+
+
+    async function createOrder(payType){        
+        const date = getDate()
+
+        // Add to User Order
+        const response = await apiFunc.value.add('http://127.0.0.1:8000/api/user_order/',{
+            payment_type: payType,
+            order_date: date,
+            user_id: loggedUser.user_id,
+            order_status: 'preparing'
+        })
+
+        // Add to Order
+        let orderNum = response.data.user_order_id   
+        if (response.isSuccess){
+                     
+            await apiFunc.value.add('http://127.0.0.1:8000/api/order/',{
+                order_id: orderNum,
+                user_order_id: orderNum
+            })
+        }
+
+        // Add to Food
+        for (const food of foodList.value) {
+            if (food.quantity > 0){
+                let newStock = food.available_stock - food.quantity;
+                await apiFunc.value.add('http://127.0.0.1:8000/api/food/', {
+                    quantity: food.quantity,
+                    order_id: orderNum,
+                    food_detail_id: food.food_detail_id
+                });
+
+                await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/change_stock/${food.food_detail_id}`, {
+                    available_stock: newStock    
+                });
+            }
+        }
+
+        // if tally
+        if (payType==='tally'){
+            apiFunc.value.add('http://127.0.0.1:8000/api/tally/',{
+                tally_status: "unpaid",
+                salary_period: date,
+                user_order_id: orderNum
+            })
+        }
+        
+
+        router.push('/orderSuccess')
+    }
+    
+
 </script>
 
 <template>
@@ -63,7 +127,12 @@
                             <img :src="food.image" style="width: 100%; height: 200px;" v-else>
                         </template>
                         <template #title>{{ food.name }}</template>
-                        <template #subtitle> P{{ food.price }}</template>
+                        <template #subtitle>
+                            <p>
+                                <span> P{{ food.price }} </span>
+                                <span style="float: right;"> x{{ food.available_stock-food.quantity }} </span>
+                            </p>
+                        </template>
                         <template #footer >
                             <div style="float: right;">
                                 <Button icon="pi pi-cart-plus" label="Add" class="m-1" @click="addFood(food)"></Button>
@@ -83,13 +152,10 @@
                     <div v-if="food.quantity > 0">
 
                         
-                        <Card style="width: 300px; height:200px; overflow: hidden;" class="box-shadow m-3">
-                            <!-- <template #header>
-                                <img src="../assets/food_placeholder.jpg" style="width: 100%;">
-                            </template> -->
+                        <Card style="width: 90%; height:125px; overflow: hidden;" class="box-shadow m-3">
                             <template #title>{{ food.name }} x{{ food.quantity }}</template>
-                            <template #subtitle> P{{ food.price * food.quantity}}</template>
-                            <template #footer >
+                            <template #subtitle> P{{ food.price * food.quantity}}
+                            
                                 <div style="float: right;">
                                     <Button icon="pi pi-minus" class="m-1" @click="decrementFood(food)"></Button>
                                     <Button icon="pi pi-plus" class="m-1" @click="incrementFood(food)"></Button>
@@ -105,8 +171,17 @@
                 <h4>Payment</h4>
                 <p>Total Payment: P{{ totalPrice }} </p>
 
-                <Button label="Cash" icon="pi pi-money-bill" class="m-2" @click="router.push('/orderSuccess')"></Button>
-                <Button label="Tally" icon="pi pi-list" class="m-2" @click=""></Button>
+                
+                <div v-if="loggedUser.user_type === 'personnel'">
+                    <p>Payment Type</p>
+                    <Button label="Cash" icon="pi pi-money-bill" class="m-2" @click="createOrder('cash')"></Button>
+                    <Button label="Tally" icon="pi pi-list" class="m-2" @click="createOrder('tally')"></Button>
+                </div>
+
+                <div v-else>
+                    <Button label="Confirm Order" icon="pi pi-cart-plus" @click="createOrder('cash')"></Button>
+                </div>
+                
 
                 <!-- <input type="button" value="Cash" class="m-2 btn-uic" @click="router.push('/orderSuccess')">
                 <input type="button" value="Tally" class="btn-uic" @click=""> -->
@@ -119,7 +194,7 @@
 <style scoped>
 
     .my-order-list {
-        height: 40vh;
+        height: 50vh;
     }
 
     .my-payment {
@@ -140,7 +215,7 @@
     .food-grid {
         display: flex;
         flex-wrap: wrap; 
-        height: 67.3vh;
+        height: 75vh;
         overflow-y: auto;
         gap: 20px;
     }

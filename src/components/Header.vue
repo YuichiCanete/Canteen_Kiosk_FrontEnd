@@ -1,10 +1,17 @@
 <script setup>
     import { useRouter } from 'vue-router';
+    import { myOrder } from '../pages/data';
     const router = new useRouter()
     defineProps({
         icon: String,
         title: String,
     })
+
+    function reset(){
+        router.push('/welcome')
+        myOrder.loginDefault()
+    }
+
 </script>
 
 <template>
@@ -17,7 +24,9 @@
             <h2 class="text-shadow" style="font-size: 30px;"><i :class="icon" class="pi text-shadow m-2 mt-0 mb-0" style="font-size: 25px;"></i >{{ title }}</h2>
         </div>
     </div>
-    <Button icon="pi pi-power-off" label="Logout" class="logoutButton text-shadow" @click="router.push('/welcome')" v-if="title !== 'Login Page'"></Button>
+
+    <Button icon="pi pi-power-off" label="Logout" class="logoutButton text-shadow" @click="reset()" v-if="title !== 'Login Page'"></Button>
+    <Button icon="pi pi-home" label="Home" class="logoutButton text-shadow" @click="reset()" v-else></Button>
 </div>
 
 

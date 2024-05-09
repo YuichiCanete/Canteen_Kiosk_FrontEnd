@@ -1,43 +1,25 @@
 import {ref} from 'vue'
 import axios from 'axios';
 
-class meOrder{
+class Order{
     constructor(){
-        this.foodList = []
+        this.currentUser = {}
     }
 
-    addFood(food,price,available_stock){
-        let existingFood = this.foodList.find(f => f.food_name === food);
-        if (existingFood) {
-            console.log("Food already exists in the list.");
-        } else {
-            this.foodList.push({
-                food_name: food,
-                price: price,
-                available_stock: available_stock,
-                quantity: 1,
-            });
+    async loginDefault(){
+        let requestUser = await apiFunc.value.get('http://127.0.0.1:8000/api/users/220000000')
+        if (requestUser.isSuccess){
+            this.currentUser = requestUser.data
         }
     }
 
-    incFood(food){
-        this.foodList.forEach(function(f){
-            if (f.food_name===food && f.quantity < f.available_stock){
-                f.quantity += 1
-            }
-        })
+    async loginUser(userID){
+        let requestUser = await apiFunc.value.get(`http://127.0.0.1:8000/api/users/${userID}`)
+        if (requestUser.isSuccess){
+            this.currentUser = requestUser.data
+        }
     }
 
-    decFood(food) {
-        this.foodList.forEach((f, index) => {
-            if (f.food_name === food && f.quantity > 0) {
-                f.quantity -= 1;
-                if (f.quantity === 0) {
-                    this.foodList.splice(index, 1); // Remove the element from the array
-                }
-            }
-        });
-    }
 }
 
 class apiFunctions {
@@ -68,26 +50,38 @@ class apiFunctions {
             }
         });
           console.log('Update Success');
-          return {isSuccess:true}
+          return {
+            isSuccess: true,
+            data: response.data
+            }
         } catch (err) {
           console.error('Update Error:', err);
-          return {isSuccess:false}
+          return {
+            isSuccess: false,
+            data: []
+        };
         }
     }
 
     async add(linkRoute,addObject){
         try {
-            await axios.post(linkRoute, addObject, {
+            const response = await axios.post(linkRoute, addObject, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': 'application/json'
                 }
             });
             console.log('Adding Success')
-            return {isSuccess:true}
+            return {
+                isSuccess: true,
+                data: response.data
+                }
         } catch (err) {
             console.error('Adding Error:', err);    
-            return {isSuccess:false}
+            return {
+                isSuccess: false,
+                data: []
+            };
         }
     }
 
@@ -103,13 +97,6 @@ class apiFunctions {
     }
 }
 
-let currentUser = ref(0);
-
-// [Extract Id from link]
-// const router = useRouter();
-// const expenseId = parseInt(router.currentRoute.value.params.expenseId);
-
-// Example usage:
 const apiFunc = ref(new apiFunctions())
-const myOrder = ref(new meOrder())
-export { apiFunc, myOrder, currentUser};
+const myOrder = new Order()
+export { apiFunc, myOrder};
