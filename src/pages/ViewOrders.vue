@@ -11,6 +11,8 @@
     const selectedTab = ref(0)
     const editing = ref({})
     const selectedStatus = ref()
+    const tallyEditing = ref({})
+    const selectedTally = ref()
 
     let foodAdding = ref({
         name: '',
@@ -33,9 +35,25 @@
         {name: 'Done', code:'done',},
     ])
 
+    const tallyStats = ref([
+        {name: "paid", code: 'paid'},
+        {name: "unpaid", code: 'unpaid'},
+    ])
+
     function editOrder(orderData){
         editing.value = orderData
     }
+
+    function editTally(tallyData){
+        tallyEditing.value = tallyData
+    }
+
+    const editFoodInfo = ref([
+        {field: 'name', header:'Food Name'},
+        {field: 'price', header:'Price'},
+        {field: 'available_stock', header:'Inventory'},
+        {field: 'image', header:'image link'}
+    ])
 
     async function getOrders() {
         let orderRequest = await apiFunc.value.get('http://127.0.0.1:8000/api/view_order');
@@ -61,7 +79,6 @@
                 groupOrder[o.order_id].foodList.push({name: o.food_name, quantity:o.quantity});
                 groupOrder[o.order_id].total += o.unit_price * o.quantity;
             });
-            console.log(orderList.value);
             isLoaded.value = true;
         }
     }
@@ -80,18 +97,6 @@
         }
     }
 
-
-    
-
-    
-
-    const editFoodInfo = ref([
-        {field: 'name', header:'Food Name'},
-        {field: 'price', header:'Price'},
-        {field: 'available_stock', header:'Inventory'},
-        {field: 'image', header:'image link'}
-    ])
-
     async function updateStatus(orderData){
         const updatedData = {
             payment_type: orderData.paytype,
@@ -104,12 +109,30 @@
         updateDetails()
     }
 
+    async function saveTally(tallyData){
+        const updatedTally = {
+            tally_status: 'unpaid',
+            salary_period: '2000-10-10',
+            user_order_id: 1
+        }
+        tallyData.tally_status = tallyEditing.value.code
+        await apiFunc.value.update(`http://127.0.0.1:8000/api/tally/1`,updatedTally)
+        updateDetails()
+    }
+
     async function saveFood(foodData){
         await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/${foodData.food_detail_id}`,{
             name: foodData.name,
             price: foodData.price,
-            available_stock: foodData.available_stock
+            available_stock: foodData.available_stock,
+            image: foodData.image
         })
+        updateDetails()
+    }
+
+
+    async function deleteFood(foodData){
+        await apiFunc.value.remove(`http://127.0.0.1:8000/api/food_details/${foodData.food_detail_id}`)
         updateDetails()
     }
 
@@ -158,7 +181,7 @@
                 </Column>
                 <Column header="Actions">
                     <template #body="rowData">
-                        <Dropdown v-model="selectedStatus" :options="orderStats" optionLabel="name" placeholder="Select New Status" checkmark :highlightOnSelect="false" class="m-2" v-if="editing===rowData.data" />
+                        <Dropdown v-model="selectedStatus" :options="orderStats" optionLabel="name" placeholder="Select Status" checkmark :highlightOnSelect="false" class="m-2" v-if="editing===rowData.data" />
                         <Button label="Edit" class="m-1" severity="success" @click="editOrder(rowData.data)" v-else></Button>
                         <Button label="Save" class="m-1" @click="updateStatus(rowData.data)"></Button>
                     </template>
@@ -173,6 +196,13 @@
                 <Column field="salary_period" header="Salary Period"></Column>
                 <Column field="tally_status" header="Status"></Column>
                 <Column field="amount" header="Amount"></Column>
+                <!-- <Column header="Actions">
+                    <template #body="rowData">
+                        <Dropdown v-model="selectedTally" :options="tallyStats" placeholder="Select Status" optionLabel="name" checkmark :highlightOnSelect="false" v-if="tallyEditing===rowData.data" class="m-1"></Dropdown>
+                        <Button label="edit" @click="editTally(rowData.data)" class="m-1" v-if="tallyEditing !== rowData.data" severity="success"></Button>
+                        <Button label="save" @click="saveTally(rowData.data)" class="m-1"></Button>
+                    </template>
+                </Column> -->
             </DataTable>
             <Button label="Generate Tally" icon="pi pi-file-export" class="m-2"></Button>
         </div>
@@ -189,7 +219,8 @@
                 </div>
                 <Column header="Actions">
                     <template #body="rowData">
-                        <Button label="Save" @click="saveFood(rowData.data)"></Button>
+                        <Button label="Save" @click="saveFood(rowData.data)" class="m-1"></Button>
+                        <Button label="Delete" severity="danger" @click="deleteFood(rowData.data)" class="m-1"></Button>
                     </template>
                 </Column>
             </DataTable>
