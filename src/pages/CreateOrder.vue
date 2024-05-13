@@ -2,7 +2,7 @@
     import {apiFunc} from './data.js'
     import {useRouter} from 'vue-router'
     import { onBeforeMount, ref } from 'vue';
-    import { myOrder } from './data.js';
+    import { myOrder,orderNumber } from './data.js';
     
     const router = useRouter()
     
@@ -82,7 +82,7 @@
 
         // Add to Food
         for (const food of foodList.value) {
-            if (food.quantity > 0){
+            
                 let newStock = food.available_stock - food.quantity;
                 await apiFunc.value.add('http://127.0.0.1:8000/api/food/', {
                     quantity: food.quantity,
@@ -93,7 +93,7 @@
                 await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/change_stock/${food.food_detail_id}`, {
                     available_stock: newStock    
                 });
-            }
+            
         }
 
         // if tally
@@ -105,7 +105,7 @@
             })
         }
         
-
+        orderNumber.value = orderNum
         router.push('/orderSuccess')
     }
     
@@ -121,7 +121,7 @@
             <div class="food-grid" v-if="isloaded">
                 <div v-for="food in foodList">
                     
-                    <Card style="width: 300px; overflow: hidden;" class="box-shadow">
+                    <Card style="width: 300px; overflow: hidden;" class="box-shadow" v-if="food.available_stock > 0">
                         <template #header>
                             <img src="../assets/food_placeholder.jpg" style="width: 100%; height: max(100px,100%);" v-if="food.image === ''">
                             <img :src="food.image" style="width: 100%; height: 200px;" v-else>

@@ -97,6 +97,7 @@ class apiFunctions {
     }
 }
 
+const  orderNumber = ref(0)
 const apiFunc = ref(new apiFunctions())
 const myOrder = new Order()
-export { apiFunc, myOrder};
+export { apiFunc, myOrder, orderNumber};

@@ -1,6 +1,8 @@
 <script setup>
     // import {data} from './data.js'
     import {useRouter} from 'vue-router'
+    import { orderNumber } from './data';
+    
     const router = useRouter()
     function switchTo(path){
         router.push(path)
@@ -14,7 +16,7 @@
         <div class="order-container color-base p-3 round-border box-shadow text-white text-shadow">
             <h1>Order Successful</h1>
             <p>Your Order Number is...</p>
-            <p style="font-size: 100px; font-weight: bold;">1</p>
+            <p style="font-size: 100px; font-weight: bold;">{{ orderNumber }}</p>
             <input type="button" value="New Order" class="btn-uic m-2" @click="switchTo('/createOrder')">
             <input type="button" value="Logout" class="btn-uic m-2" @click="switchTo('/')">
         </div>

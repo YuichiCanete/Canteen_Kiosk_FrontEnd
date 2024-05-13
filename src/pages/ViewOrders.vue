@@ -8,11 +8,17 @@
     let orderList = ref([]);
     let tallyList = ref([]);
     let foodList = ref([])
+    
     const selectedTab = ref(0)
     const editing = ref({})
     const selectedStatus = ref()
     const tallyEditing = ref({})
-    const selectedTally = ref()
+    const selectedTally = ref({})
+    const selectedDate = ref(null)
+    
+    const tallyFilter = ref(null)
+
+    
 
     let foodAdding = ref({
         name: '',
@@ -23,6 +29,7 @@
 
     const tabOptions = ref([
         { label: 'View Orders', icon: 'pi pi-shopping-cart'},
+        { label: 'Modify Orders', icon: 'pi pi-file-edit'},
         { label: 'View Tally', icon: 'pi pi-eye'},
         { label: 'Edit Food', icon: 'pi pi-file-edit'}, 
         { label: 'Add Food', icon: 'pi pi-plus-circle'}, 
@@ -56,6 +63,7 @@
     ])
 
     async function getOrders() {
+        orderList.value = []
         let orderRequest = await apiFunc.value.get('http://127.0.0.1:8000/api/view_order');
         let userOrderRequest = await apiFunc.value.get('http://127.0.0.1:8000/api/user_order')
         if (orderRequest.isSuccess && userOrderRequest.isSuccess) {
@@ -76,7 +84,14 @@
                     };
                     orderList.value.push(groupOrder[o.order_id]);
                 }
-                groupOrder[o.order_id].foodList.push({name: o.food_name, quantity:o.quantity});
+                groupOrder[o.order_id].foodList.push({
+                    name: o.food_name,
+                    quantity:o.quantity,
+                    food_details_id: o.food_details_id,
+                    food_id: o.food_id,
+                    order_id: o.order_id,
+                    changeAmount: 0
+                });
                 groupOrder[o.order_id].total += o.unit_price * o.quantity;
             });
             isLoaded.value = true;
@@ -111,12 +126,20 @@
 
     async function saveTally(tallyData){
         const updatedTally = {
-            tally_status: 'unpaid',
-            salary_period: '2000-10-10',
-            user_order_id: 1
+            tally_status: selectedTally.value.code,
+            salary_period: selectedDate.value,
+            user_order_id: tallyData.user_order_id,
+            user_id: tallyData.user_id
         }
-        tallyData.tally_status = tallyEditing.value.code
-        await apiFunc.value.update(`http://127.0.0.1:8000/api/tally/1`,updatedTally)
+
+        tallyData.tally_status = tallyEditing.value
+        tallyData.salary_period = selectedDate.value
+        await apiFunc.value.update(`http://127.0.0.1:8000/api/tally/${tallyData.tally_id}`,updatedTally)
+        updateDetails()
+    }
+
+    async function deleteOrder(orderData){
+        await apiFunc.value.remove(`http://127.0.0.1:8000/api/user_order/{user_order}?user_order_id=${orderData.orderNum}`)
         updateDetails()
     }
 
@@ -129,7 +152,6 @@
         })
         updateDetails()
     }
-
 
     async function deleteFood(foodData){
         await apiFunc.value.remove(`http://127.0.0.1:8000/api/food_details/${foodData.food_detail_id}`)
@@ -155,10 +177,66 @@
 
     onBeforeMount(updateDetails);
 
+    const filteredTally = ref([])
+    function getFilterTally(){
+        if(tallyFilter.value){
+            filteredTally.value = tallyList
+        }else{
+            filteredTally.value = tallyList.filter((item) => item.user_id == tallyFilter)
+        }
+    }
+
+    const findOrder = ref(null)
+    const foundOrder = ref([])
+    const isOrderFound = ref(false)
+
+    function orderFinding(){        
+        foundOrder.value = orderList.value.find((order) => order.orderNum === parseInt(findOrder.value))
+        isOrderFound.value = true
+    }
+
+    async function changeEditedFood(editFood,amount){
+        const searchFood = foodList.value.find((food) => food.name === editFood.name) 
+        if (amount < 0 && editFood.quantity <= 0 ) { amount = 0}
+        if (amount > 0 && editFood.quantity >= searchFood.available_stock) { amount = 0}
+        const foodPrice = searchFood.price
+        foundOrder.value.total += amount * foodPrice
+        editFood.quantity += amount
+        editFood.changeAmount += amount
+        
+        
+    }
+
+    async function saveModifiedFood(){
+        
+        for (let food of foundOrder.value.foodList) {
+            const searchFood = foodList.value.find((f) => f.name === food.name) 
+            await apiFunc.value.update(`http://127.0.0.1:8000/api/food/${food.food_id}`,{
+                quantity: food.quantity,
+                order_id: food.order_id,
+                food_detail_id: food.food_details_id
+            });
+
+            await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/${searchFood.food_detail_id}`,{
+                name: searchFood.name,
+                price: searchFood.price,
+                available_stock: searchFood.available_stock - food.changeAmount,
+                image: searchFood.image
+            })
+
+            food.changeAmount = 0
+
+        }
+        updateDetails()
+
+    }
+
+  
+
 </script>
 
 <template>
-    <Header title="View Orders" icon="pi-eye"></Header>
+    <Header title="Cashier Page" icon="pi-shopping-cart"></Header>
     <TabMenu :model="tabOptions" v-model:activeIndex="selectedTab"/>
     
     <h2 class="text-pink m-2">{{ tabOptions[selectedTab].label }}</h2>
@@ -175,13 +253,18 @@
                 <Column header="Food Items">
                     <template #body="rowData">
                         <p v-for="food in rowData.data.foodList">
-                            {{ food.name }} x{{ food.quantity }}
+                            <div v-if="food.quantity > 0">
+                                {{ food.name }} x{{ food.quantity }}
+                            </div>
                         </p>
                     </template>
                 </Column>
                 <Column header="Actions">
                     <template #body="rowData">
-                        <Dropdown v-model="selectedStatus" :options="orderStats" optionLabel="name" placeholder="Select Status" checkmark :highlightOnSelect="false" class="m-2" v-if="editing===rowData.data" />
+                        <div v-if="editing===rowData.data">
+                            <Dropdown v-model="selectedStatus" :options="orderStats" optionLabel="name" placeholder="Select Status" checkmark :highlightOnSelect="false" class="m-2"/>
+                            <Button label="Delete" class="m-1" severity="danger" @click="deleteOrder(rowData.data)"></Button>
+                        </div>
                         <Button label="Edit" class="m-1" severity="success" @click="editOrder(rowData.data)" v-else></Button>
                         <Button label="Save" class="m-1" @click="updateStatus(rowData.data)"></Button>
                     </template>
@@ -190,24 +273,47 @@
             
         </div>
 
-        <div v-else-if="selectedTab===1">
-            <DataTable :value="tallyList" tableStyle="width: 100%" scrollable scrollHeight="400px">
+        <div v-else-if="selectedTab==1">
+            <InputText v-model="findOrder" placeholder="Order ID" class="m-2"></InputText>
+            <Button icon="pi pi-search" label="Search Order" class="m-2" @click="orderFinding()"></Button>
+            <Button icon="pi pi-file-plus" label="Save Order" class="m-2" @click="saveModifiedFood();"></Button>
+            <div>
+                <h3 class="text-pink">Order Number: {{ foundOrder.orderNum }}</h3>
+                <h4 class="text-pink">Total: {{ foundOrder.total }}</h4>
+                
+                <div v-for="food in foundOrder.foodList" style="display: flex;">
+                    <p>{{ food.name }} x{{ food.quantity }}</p>
+                    <Button icon="pi pi-minus" class="m-1" @click="changeEditedFood(food,-1)"></Button>
+                    <Button icon="pi pi-plus" class="m-1" @click="changeEditedFood(food,1)"></Button>
+                </div>
+
+            </div>
+        </div>
+
+        <div v-else-if="selectedTab===2">
+            
+            <InputText placeholder="Search User" v-model="tallyFilter"/>
+            <DataTable :value="(tallyFilter === '' || tallyFilter === null) ? tallyList : tallyList.filter(item => item.user_id === parseInt(tallyFilter))" tableStyle="width: 100%" scrollable scrollHeight="400px">
                 <Column field="user_id" header="User Id"></Column>
                 <Column field="salary_period" header="Salary Period"></Column>
                 <Column field="tally_status" header="Status"></Column>
                 <Column field="amount" header="Amount"></Column>
-                <!-- <Column header="Actions">
+                <Column header="Actions">
                     <template #body="rowData">
-                        <Dropdown v-model="selectedTally" :options="tallyStats" placeholder="Select Status" optionLabel="name" checkmark :highlightOnSelect="false" v-if="tallyEditing===rowData.data" class="m-1"></Dropdown>
+                        <div v-if="tallyEditing===rowData.data">
+                            <Dropdown v-model="selectedTally" :options="tallyStats" placeholder="Select Status" optionLabel="name" checkmark :highlightOnSelect="false" class="m-1"></Dropdown>
+                            <InputText v-model="selectedDate" type="date"></InputText>
+                        </div>
+                        
                         <Button label="edit" @click="editTally(rowData.data)" class="m-1" v-if="tallyEditing !== rowData.data" severity="success"></Button>
                         <Button label="save" @click="saveTally(rowData.data)" class="m-1"></Button>
                     </template>
-                </Column> -->
+                </Column>
             </DataTable>
             <Button label="Generate Tally" icon="pi pi-file-export" class="m-2"></Button>
         </div>
 
-        <div v-else-if="selectedTab===2">
+        <div v-else-if="selectedTab===3">
             <DataTable :value="foodList" tableStyle="width: 100%" scrollable scrollHeight="400px">
                 <Column field="food_detail_id" header="ID"></Column>
                 <div v-for="editFood in editFoodInfo">
@@ -226,7 +332,7 @@
             </DataTable>
         </div>
 
-        <div v-else-if="selectedTab===3">
+        <div v-else-if="selectedTab===4">
             <InputText v-model="foodAdding.name" placeholder="Food Name" class="m-2"></InputText> <br>
             <InputText v-model="foodAdding.price" placeholder="Price" class="m-2"></InputText> <br>
             <InputText v-model="foodAdding.available_stock" placeholder="Inventory" class="m-2"></InputText> <br>
@@ -236,17 +342,6 @@
         </div>
 
     </div>
-
-    
-
-
-
-
-
-    
-
-    
-    
 
 </template>
 
