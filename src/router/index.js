@@ -6,8 +6,9 @@ import CreateOrder from "../pages/CreateOrder.vue"
 import OrderSuccess from "../pages/OrderSuccess.vue"
 import Counter from "../pages/Counter.vue"
 import EditMenu from "../pages/EditMenu.vue"
-import ViewOrders from "../pages/ViewOrders.vue"
+
 import Welcome from "../pages/Welcome.vue";
+import Cashier from "../pages/Cashier.vue";
 
 
 const routes = []
@@ -25,7 +26,7 @@ addRoute("/createOrder","Create Order",CreateOrder)
 addRoute("/orderSuccess","Order Success",OrderSuccess)
 addRoute("/counter","Counter",Counter)
 addRoute("/editMenu","Edit Menu",EditMenu) 
-addRoute("/viewOrders","View Orders",ViewOrders)
+addRoute("/cashier","Cashier Page",Cashier)
 addRoute("/admin","Admin",Admin)
 addRoute("/welcome","Welcome",Welcome)
 

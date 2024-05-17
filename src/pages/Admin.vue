@@ -3,15 +3,13 @@
     import { apiFunc } from './data.js';
     import Dropdown from 'primevue/dropdown';
     import TabMenu from 'primevue/tabmenu';
-    import { useConfirm } from "primevue/useconfirm";
+    
     import { useToast } from "primevue/usetoast";
-
-    const confirm = useConfirm();
     const toast = useToast();
 
     let users = ref([]);
     async function updateUsers(){
-        let requestUsers = await apiFunc.value.get('http://127.0.0.1:8000/api/users')
+        let requestUsers = await apiFunc.value.get('/api/users')
         if (requestUsers.isSuccess){
             users.value = requestUsers.data
             console.log(users.value)
@@ -43,20 +41,20 @@
     async function onSubmit() {
         const actions = [
             async () => {
-                return await apiFunc.value.add('http://127.0.0.1:8000/api/users/', {
+                return await apiFunc.value.add('/api/users/', {
                     user_id: parseInt(userInp.value),
                     password: passInp.value,
                     user_type: selectedType.value.code
                 });
             },
             async () => {
-                return await apiFunc.value.update(`http://127.0.0.1:8000/api/users/${userInp.value}`, {
+                return await apiFunc.value.update(`/api/users/${userInp.value}`, {
                     password: passInp.value,
                     user_type: selectedType.value.code
                 });
             },
             async () => {
-                return await apiFunc.value.remove(`http://127.0.0.1:8000/api/users/${userInp.value}`);
+                return await apiFunc.value.remove(`/api/users/${userInp.value}`);
             }
         ];
         let response = await actions[selectedTab.value]();
@@ -99,7 +97,7 @@
     <Header title="Admin Page" icon="pi-user"></Header>
 
     <Toast />
-    <ConfirmDialog></ConfirmDialog>
+    
 
     <TabMenu :model="tabOptions" v-model:activeIndex="selectedTab"/>
                 

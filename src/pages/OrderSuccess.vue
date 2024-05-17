@@ -17,8 +17,8 @@
             <h1>Order Successful</h1>
             <p>Your Order Number is...</p>
             <p style="font-size: 100px; font-weight: bold;">{{ orderNumber }}</p>
-            <input type="button" value="New Order" class="btn-uic m-2" @click="switchTo('/createOrder')">
-            <input type="button" value="Logout" class="btn-uic m-2" @click="switchTo('/')">
+            <Button icon="pi pi-cart-plus" label="New Order" class="m-1 text-pink" @click="switchTo('/createOrder')" raised style="background-color: white;"></Button>
+            <Button icon="pi pi-power-off" label="Logout" class="m-1 text-pink" @click="switchTo('/welcome')" raised style="background-color: white;"></Button>
         </div>
     </div>
 </template>

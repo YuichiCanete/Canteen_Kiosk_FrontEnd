@@ -3,7 +3,7 @@
     import {apiFunc} from './data.js'
     let foodList = ref([])
     async function updateFood(){
-        let requestFood = await apiFunc.value.get('http://127.0.0.1:8000/api/food_details')
+        let requestFood = await apiFunc.value.get('/api/food_details')
         if (requestFood.isSuccess){
             foodList.value = requestFood.data
         }
@@ -15,7 +15,7 @@
             ['food_id', 'food_name', 'food_price', 'food_stock']
             .map(i => document.getElementById(i).value);
         
-        await apiFunc.value.add('http://127.0.0.1:8000/api/food_details/',{
+        await apiFunc.value.add('/api/food_details/',{
             food_detail_id:food_id,
             name: food_name,
             price: food_price,

@@ -12,7 +12,7 @@
     let foodList = ref([])
     let totalPrice = ref(0)
     async function getFood() {
-        let requestFood = await apiFunc.value.get('http://127.0.0.1:8000/api/food_details')
+        let requestFood = await apiFunc.value.get('/api/food_details')
         if (requestFood.isSuccess){
             foodList.value = requestFood.data
             isloaded.value = true
@@ -58,56 +58,69 @@
         return `${year}-${month}-${day}`;
     }
 
+    async function createOrder(payType) {
+    const date = getDate();
 
-    async function createOrder(payType){        
-        const date = getDate()
-
+    // Show confirmation prompt
+    const confirmOrder = await showConfirmationPrompt();
+    
+    if (confirmOrder) {
         // Add to User Order
-        const response = await apiFunc.value.add('http://127.0.0.1:8000/api/user_order/',{
+        const response = await apiFunc.value.add('/api/user_order/', {
             payment_type: payType,
             order_date: date,
             user_id: loggedUser.user_id,
             order_status: 'preparing'
-        })
+        });
 
         // Add to Order
-        let orderNum = response.data.user_order_id   
-        if (response.isSuccess){
-                     
-            await apiFunc.value.add('http://127.0.0.1:8000/api/order/',{
+        let orderNum = response.data.user_order_id;
+        if (response.isSuccess) {
+            await apiFunc.value.add('/api/order/', {
                 order_id: orderNum,
                 user_order_id: orderNum
-            })
+            });
         }
 
         // Add to Food
         for (const food of foodList.value) {
-            
-                let newStock = food.available_stock - food.quantity;
-                await apiFunc.value.add('http://127.0.0.1:8000/api/food/', {
-                    quantity: food.quantity,
-                    order_id: orderNum,
-                    food_detail_id: food.food_detail_id
-                });
+            let newStock = food.available_stock - food.quantity;
+            await apiFunc.value.add('/api/food/', {
+                quantity: food.quantity,
+                order_id: orderNum,
+                food_detail_id: food.food_detail_id
+            });
 
-                await apiFunc.value.update(`http://127.0.0.1:8000/api/food_details/change_stock/${food.food_detail_id}`, {
-                    available_stock: newStock    
-                });
-            
+            await apiFunc.value.update(`/api/food_details/change_stock/${food.food_detail_id}`, {
+                available_stock: newStock
+            });
         }
 
         // if tally
-        if (payType==='tally'){
-            apiFunc.value.add('http://127.0.0.1:8000/api/tally/',{
+        if (payType === 'tally') {
+            apiFunc.value.add('/api/tally/', {
                 tally_status: "unpaid",
                 salary_period: date,
                 user_order_id: orderNum
-            })
+            });
         }
-        
-        orderNumber.value = orderNum
-        router.push('/orderSuccess')
+
+        orderNumber.value = orderNum;
+        router.push('/orderSuccess');
+    } else {
+        // Order canceled by the user
+        console.log("Order canceled.");
     }
+}
+
+async function showConfirmationPrompt() {
+    return new Promise((resolve) => {
+        // Example of showing a confirmation dialog using window.confirm()
+        const confirmed = window.confirm("Do you want to confirm the order?");
+        resolve(confirmed);
+    });
+}
+
     
 
 </script>
@@ -150,7 +163,6 @@
 
                 <div v-for="food in foodList">
                     <div v-if="food.quantity > 0">
-
                         
                         <Card style="width: 90%; height:125px; overflow: hidden;" class="box-shadow m-3">
                             <template #title>{{ food.name }} x{{ food.quantity }}</template>

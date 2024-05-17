@@ -6,7 +6,6 @@
     import { useToast } from "primevue/usetoast";
     import { myOrder } from './data.js';
 
-    const confirm = useConfirm();
     const toast = useToast();
     const router = useRouter();
 
@@ -16,7 +15,7 @@
     let isLogging = ref(false)
 
     async function getUsers(useID) {
-        return await apiFunc.value.get('http://127.0.0.1:8000/api/users/' + useID);
+        return await apiFunc.value.get('/api/users/' + useID);
     }
 
     async function loginUser() {
@@ -33,7 +32,7 @@
                             router.push('/createOrder')
                             break;
                         case "cashier":
-                            router.push('/viewOrders')
+                            router.push('/cashier')
                             break;
                         case "admin":
                             router.push('/admin')
@@ -93,7 +92,7 @@
 <style scoped>
 
     .login-container {
-        width: min(500px,50%);
+        width: min(500px,75%);
         height: 75%;
         border-radius: 15px;
         /* border: 3px solid white; */
@@ -114,6 +113,7 @@
         height: 100%;
         z-index: -1;
         background-size: cover;
+        object-fit: cover;
     }
     
 

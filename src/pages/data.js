@@ -7,14 +7,14 @@ class Order{
     }
 
     async loginDefault(){
-        let requestUser = await apiFunc.value.get('http://127.0.0.1:8000/api/users/220000000')
+        let requestUser = await apiFunc.value.get('/api/users/220000000')
         if (requestUser.isSuccess){
             this.currentUser = requestUser.data
         }
     }
 
     async loginUser(userID){
-        let requestUser = await apiFunc.value.get(`http://127.0.0.1:8000/api/users/${userID}`)
+        let requestUser = await apiFunc.value.get(`/api/users/${userID}`)
         if (requestUser.isSuccess){
             this.currentUser = requestUser.data
         }
@@ -23,10 +23,13 @@ class Order{
 }
 
 class apiFunctions {
+    constructor(){
+        this.link = "http://127.0.0.1:8000"
+    }
 
     async get(linkRoute) {
         try {
-            const response = await axios.get(linkRoute);
+            const response = await axios.get(this.link+linkRoute);
             console.log('Get Success');
             return {
                 isSuccess: true,
@@ -43,7 +46,7 @@ class apiFunctions {
 
     async update(linkRoute,updatedObject){
         try {
-          const response = await axios.put(linkRoute, updatedObject,{
+          const response = await axios.put(this.link+linkRoute, updatedObject,{
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json'
@@ -65,7 +68,7 @@ class apiFunctions {
 
     async add(linkRoute,addObject){
         try {
-            const response = await axios.post(linkRoute, addObject, {
+            const response = await axios.post(this.link+linkRoute, addObject, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': 'application/json'
@@ -87,7 +90,7 @@ class apiFunctions {
 
     async remove(linkRoute){
         try {
-            await axios.delete(linkRoute);   
+            await axios.delete(this.link+linkRoute);   
             console.log('Delete Success')
             return {isSuccess:true}
         } catch (err) {

@@ -7,8 +7,8 @@
     const preparingOrder = ref([])
 
     async function updateOrders(){
-        let requestReady = await apiFunc.value.get('http://127.0.0.1:8000/api/order_ready')
-        let requestPreparing = await apiFunc.value.get('http://127.0.0.1:8000/api/order_preparing')
+        let requestReady = await apiFunc.value.get('/api/order_ready')
+        let requestPreparing = await apiFunc.value.get('/api/order_preparing')
 
         if (requestPreparing.isSuccess && requestReady.isSuccess){
             readyOrder.value = requestReady.data
@@ -28,18 +28,15 @@
 
     <div class="center">
         <div class="orderContainer">
-            <DataTable :value="preparingOrder" tableStyle="width: 100%" scrollable scrollHeight="75vh" style="font-size: 50px;" class="m-5">
+            <DataTable :value="preparingOrder" tableStyle="width: 100%" scrollable scrollHeight="75vh" style="font-size: 50px; overflow-x: hidden;" class="m-5">
                 <Column field="user_order_id" header="Preparing..."></Column>
             </DataTable>
 
-            <DataTable :value="readyOrder" tableStyle="width: 100%" scrollable scrollHeight="700vh" style="font-size: 50px;" class="m-5">
+            <DataTable :value="readyOrder" tableStyle="width: 100%" scrollable scrollHeight="700vh" style="font-size: 50px; overflow-x: hidden;" class="m-5">
                 <Column field="user_order_id" header="Ready..."></Column>
             </DataTable>
         </div>
     </div>
-
-    
-
 </template>
 
 <style scoped>
